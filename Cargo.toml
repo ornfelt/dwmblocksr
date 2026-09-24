@@ -1,0 +1,23 @@
+[package]
+name = "dwmblocksr"
+version = "1.0.0"
+edition = "2021"
+description = "modular status bar for dwm - a Rust port of dwmblocks"
+license = "ISC"
+readme = "README.md"
+
+[[bin]]
+name = "dwmblocksr"
+path = "src/main.rs"
+
+[dependencies]
+libc = "0.2"
+x11 = { version = "2.21", features = ["xlib"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

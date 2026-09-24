@@ -1,0 +1,61 @@
+# dwmblocksr - modular status bar for dwm (Rust port of dwmblocks)
+# See LICENSE file for copyright and license details.
+
+VERSION = 1.0.0
+
+# paths
+PREFIX = /usr/local
+MANPREFIX = ${PREFIX}/share/man
+
+CARGO = cargo
+BIN = target/release/dwmblocksr
+USERHOME = ${HOME}
+
+# cargo/rustup toolchains are per user, so under `sudo make install` build
+# (and find the config dir) as the invoking user, not as root
+ifneq (${SUDO_USER},)
+CARGO = sudo -u ${SUDO_USER} -H cargo
+USERHOME = $(shell getent passwd ${SUDO_USER} | cut -d: -f6)
+endif
+CONFDIR = ${USERHOME}/.config/dwmblocksr
+
+all: ${BIN}
+
+${BIN}: Cargo.toml src/*.rs
+	${CARGO} build --release
+
+test:
+	${CARGO} test
+
+clean:
+	${CARGO} clean
+
+install: all
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp -f ${BIN} ${DESTDIR}${PREFIX}/bin/dwmblocksr
+	chmod 755 ${DESTDIR}${PREFIX}/bin/dwmblocksr
+	mkdir -p ${DESTDIR}${MANPREFIX}/man1
+	sed "s/VERSION/${VERSION}/g" < dwmblocksr.1 > ${DESTDIR}${MANPREFIX}/man1/dwmblocksr.1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/dwmblocksr.1
+
+# copy the default config to ~/.config/dwmblocksr unless one is already there;
+# like dwmblocks' compile.sh, without a battery the sb-battery block is
+# swapped for sb-internet
+install-config:
+	mkdir -p ${CONFDIR}
+	[ -e ${CONFDIR}/config.toml ] || { \
+		bat=; for b in /sys/class/power_supply/BAT?*; do [ -e "$$b" ] && bat=1; done; \
+		if [ -n "$$bat" ]; then \
+			cp config/config.toml ${CONFDIR}/config.toml; \
+		else \
+			echo "No battery found, using sb-internet instead of sb-battery"; \
+			sed -e 's/^\( *\)\({.*sb-battery.*\)$$/\1#\2/' \
+			    -e 's/^\( *\)#\({.*sb-internet.*\)$$/\1\2/' \
+				config/config.toml > ${CONFDIR}/config.toml; \
+		fi; }
+
+uninstall:
+	rm -f ${DESTDIR}${PREFIX}/bin/dwmblocksr\
+		${DESTDIR}${MANPREFIX}/man1/dwmblocksr.1
+
+.PHONY: all test clean install install-config uninstall

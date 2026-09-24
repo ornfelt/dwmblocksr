@@ -1,0 +1,90 @@
+.TH DWMBLOCKSR 1 dwmblocksr\-VERSION
+.SH NAME
+dwmblocksr \- modular status bar for dwm (Rust port of dwmblocks)
+.SH SYNOPSIS
+.B dwmblocksr
+.RB [ \-d
+.IR delim ]
+.RB [ \-p ]
+.RB [ \-v ]
+.SH DESCRIPTION
+dwmblocksr builds dwm's status text from blocks, each the first line of the
+output of a shell command, and sets it as the name of the root window, which
+dwm draws in its bar. It is a port of dwmblocks to Rust with the same
+behaviour.
+.P
+Every block has an icon, a command, an update interval in seconds and an
+update signal. A block's command runs with
+.B /bin/sh \-c
+every
+.I interval
+seconds (never if 0) and whenever dwmblocksr receives the signal
+SIGRTMIN+\fIsignal\fR, e.g.
+.BR "pkill \-RTMIN+10 dwmblocksr" .
+The blocks are put together in order, separated by the delimiter; a block
+whose icon and output are both empty is left out. A block's text is cut to
+100 bytes, never in the middle of a UTF\-8 character.
+.P
+By default the commands run in parallel, so a slow command does not hold up
+the other blocks, and a command that is still running when its block is due
+again is left to finish and run again afterwards.
+.P
+Status2d colour codes such as ^2^ or ^c#rrggbb^, in icons or in command
+output, are passed to dwm unchanged.
+.SH CLICKABLE BLOCKS
+Each block with a signal starts with that signal as a byte (1 to 31), which
+dwm's statuscmd patch uses to find the clicked block. dwm then sends the
+block's signal with
+.BR sigqueue (3),
+the mouse button as the value. dwmblocksr runs the block's command in the
+background with
+.B BLOCK_BUTTON
+set to the button and its output discarded, and updates the block
+afterwards. A signal sent with
+.BR kill (1)
+only updates the block.
+.SH OPTIONS
+.TP
+.BI \-d " delim"
+use
+.I delim
+instead of the configured delimiter (at most
+.B delimlen
+bytes of it).
+.TP
+.B \-p
+write the status to standard output, one line whenever it changes, instead
+of setting the root window name; blocks then have no signal byte.
+.TP
+.B \-v
+prints version information to stderr, then exits.
+.SH CONFIGURATION
+dwmblocksr reads
+.I $XDG_CONFIG_HOME/dwmblocksr/config.toml
+(normally
+.IR ~/.config/dwmblocksr/config.toml )
+at startup; every key is optional and defaults to the built\-in
+configuration. A file that fails to parse is reported on stderr and ignored.
+The keys are
+.B blocks
+(a list of
+.BR "{ icon, command, interval, signal }" ),
+.B delim
+(the delimiter, default " "),
+.B delimlen
+(the most bytes of it used, default 5) and
+.B async
+(false runs the commands one at a time, default true).
+Changes take effect when dwmblocksr is restarted.
+.SH SIGNALS
+.TP
+.B SIGTERM, SIGINT
+exit, after clearing the root window name so dwm shows its default text.
+.TP
+.B SIGRTMIN+n
+update every block with signal
+.IR n ;
+with a sigqueue value, click them.
+.SH SEE ALSO
+.BR dwm (1),
+.BR dwmr (1)
