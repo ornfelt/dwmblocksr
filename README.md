@@ -23,8 +23,10 @@ button as the `sigqueue` value), and the same `BLOCK_BUTTON` for the scripts.
     sudo make install       # /usr/local/bin/dwmblocksr and the man page
     make install-config     # copy the default config to ~/.config/dwmblocksr/config.toml
 
-Like dwmblocks' `compile.sh`, `make install-config` uses the `sb-internet`
-block instead of `sb-battery` when there is no `/sys/class/power_supply/BAT*`.
+What dwmblocks' `compile.sh` did at build time, using the `sb-internet` block
+instead of `sb-battery` when there is no `/sys/class/power_supply/BAT*`,
+dwmblocksr does at startup (the `battery` key below), so one config works on
+every machine and a plain `sudo make clean install` is enough.
 
 ## Running
 
@@ -57,6 +59,9 @@ commented default.
 - `interval` is in seconds; 0 means the block only updates on its signal.
 - `signal` n updates the block on SIGRTMIN+n (`pkill -RTMIN+n dwmblocksr`)
   and makes it clickable; 0 means no signal. It has to be at most 30.
+- `battery = true` keeps the block only when there is a battery
+  (`/sys/class/power_supply/BAT*`), `battery = false` only when there is
+  none; leave it out to always show the block. It is checked at startup.
 - Status2d codes (`^2^`, `^c#rrggbb^`, `^B^`...`^N^`) in icons and output
   are passed to dwm unchanged.
 

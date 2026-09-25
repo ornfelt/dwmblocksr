@@ -23,6 +23,9 @@ pub struct Block {
     pub command: String,
     pub interval: u32,
     pub signal: u32,
+    /// Some(true) keeps the block only with a battery, Some(false) only
+    /// without one (compile.sh's sb-battery/sb-internet swap); None always.
+    pub battery: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -39,11 +42,25 @@ pub struct Config {
 }
 
 fn block(icon: &str, command: &str, interval: u32, signal: u32) -> Block {
-    Block { icon: icon.to_string(), command: command.to_string(), interval, signal }
+    Block { icon: icon.to_string(), command: command.to_string(), interval, signal, battery: None }
+}
+
+/// A block used only with (`present`) or without a battery.
+fn ifbattery(present: bool, b: Block) -> Block {
+    Block { battery: Some(present), ..b }
+}
+
+/// compile.sh's test: is there a /sys/class/power_supply/BAT?* entry?
+pub fn hasbattery() -> bool {
+    let Ok(dir) = std::fs::read_dir("/sys/class/power_supply") else {
+        return false;
+    };
+    dir.flatten().any(|e| e.file_name().as_encoded_bytes().strip_prefix(b"BAT").is_some_and(|rest| !rest.is_empty()))
 }
 
 impl Default for Config {
-    /// blocks.def.h
+    /// blocks.def.h, with compile.sh's sb-battery/sb-internet swap as a
+    /// pair of battery blocks
     fn default() -> Self {
         Config {
             blocks: vec![
@@ -54,8 +71,9 @@ impl Default for Config {
                 block("^2^\u{f0c2}  ",       "~/.local/bin/statusbar/weather",               1800,            5),
                 block("^3^ \u{f2c8} ",       "~/.local/bin/statusbar/cputemp",               5,               4),
                 block("^4^ ",                "~/.local/bin/statusbar/sb-volume",             0,               10),
-                /* block("^5^ ",             "~/.local/bin/statusbar/sb-internet",           5,               3), */
-                block("^5^ ",                "~/.local/bin/statusbar/sb-battery",            5,               3),
+                /* without a battery, sb-internet takes sb-battery's place */
+                ifbattery(false, block("^5^ ", "~/.local/bin/statusbar/sb-internet",         5,               3)),
+                ifbattery(true, block("^5^ ",  "~/.local/bin/statusbar/sb-battery",          5,               3)),
                 block("^6^ \u{f017} ",       "~/.local/bin/statusbar/sb-clock",              5,               1),
             ],
             delim: " ".to_string(),
@@ -77,9 +95,23 @@ pub fn config_path() -> Option<PathBuf> {
     Some(base.join("dwmblocksr").join("config.toml"))
 }
 
+impl Config {
+    /// Drop the blocks that are not for this machine: `battery = true`
+    /// blocks without a battery, `battery = false` blocks with one.
+    pub fn selectblocks(&mut self, battery: bool) {
+        self.blocks.retain(|b| b.battery.is_none_or(|want| want == battery));
+    }
+}
+
 /// Load the configuration: the config file if it exists and is valid, the
-/// built-in defaults otherwise.
+/// built-in defaults otherwise, with the blocks for this machine.
 pub fn load() -> Config {
+    let mut config = loadfile();
+    config.selectblocks(hasbattery());
+    config
+}
+
+fn loadfile() -> Config {
     let Some(path) = config_path() else {
         return Config::default();
     };
@@ -137,6 +169,7 @@ struct RawBlock {
     interval: u32,
     #[serde(default)]
     signal: u32,
+    battery: Option<bool>,
 }
 
 /// Parse a config file on top of the defaults, rejecting values that the C
@@ -160,7 +193,7 @@ pub fn parse(text: &str) -> Result<Config, ConfigError> {
     if let Some(blocks) = raw.blocks {
         config.blocks = blocks
             .into_iter()
-            .map(|b| Block { icon: b.icon, command: b.command, interval: b.interval, signal: b.signal })
+            .map(|b| Block { icon: b.icon, command: b.command, interval: b.interval, signal: b.signal, battery: b.battery })
             .collect();
     }
 
@@ -219,7 +252,25 @@ mod tests {
         let d = Config::default();
         assert_eq!(d.blocks[2].icon.as_bytes(), b"^2^\xef\x83\x82  ");
         assert_eq!(d.blocks[3].icon.as_bytes(), b"^3^ \xef\x8b\x88 ");
-        assert_eq!(d.blocks[6].icon.as_bytes(), b"^6^ \xef\x80\x97 ");
+        assert_eq!(d.blocks[7].icon.as_bytes(), b"^6^ \xef\x80\x97 ");
+    }
+
+    /// compile.sh: sb-battery with a battery, sb-internet without one.
+    #[test]
+    fn battery_blocks() {
+        let command = |battery| {
+            let mut c = Config::default();
+            c.selectblocks(battery);
+            assert_eq!(c.blocks.len(), 7);
+            c.blocks.iter().map(|b| b.command.clone()).collect::<Vec<_>>()
+        };
+        assert!(command(true).iter().any(|c| c.ends_with("sb-battery")));
+        assert!(!command(true).iter().any(|c| c.ends_with("sb-internet")));
+        assert!(command(false).iter().any(|c| c.ends_with("sb-internet")));
+        assert!(!command(false).iter().any(|c| c.ends_with("sb-battery")));
+        let mut c = parse("blocks = [ { command = \"a\" }, { command = \"b\", battery = false } ]").unwrap();
+        c.selectblocks(true);
+        assert_eq!(c.blocks, vec![block("", "a", 0, 0)]);
     }
 
     #[test]

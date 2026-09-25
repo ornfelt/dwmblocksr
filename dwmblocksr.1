@@ -68,7 +68,12 @@ configuration. A file that fails to parse is reported on stderr and ignored.
 The keys are
 .B blocks
 (a list of
-.BR "{ icon, command, interval, signal }" ),
+.BR "{ icon, command, interval, signal, battery }" ;
+a block with
+.B battery = true
+is used only when /sys/class/power_supply/BAT* exists, one with
+.B battery = false
+only when it does not),
 .B delim
 (the delimiter, default " "),
 .B delimlen

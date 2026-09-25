@@ -39,20 +39,11 @@ install: all
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/dwmblocksr.1
 
 # copy the default config to ~/.config/dwmblocksr unless one is already there;
-# like dwmblocks' compile.sh, without a battery the sb-battery block is
-# swapped for sb-internet
+# dwmblocksr itself picks sb-battery or sb-internet at startup (the blocks'
+# battery key), which dwmblocks' compile.sh did at build time
 install-config:
 	mkdir -p ${CONFDIR}
-	[ -e ${CONFDIR}/config.toml ] || { \
-		bat=; for b in /sys/class/power_supply/BAT?*; do [ -e "$$b" ] && bat=1; done; \
-		if [ -n "$$bat" ]; then \
-			cp config/config.toml ${CONFDIR}/config.toml; \
-		else \
-			echo "No battery found, using sb-internet instead of sb-battery"; \
-			sed -e 's/^\( *\)\({.*sb-battery.*\)$$/\1#\2/' \
-			    -e 's/^\( *\)#\({.*sb-internet.*\)$$/\1\2/' \
-				config/config.toml > ${CONFDIR}/config.toml; \
-		fi; }
+	[ -e ${CONFDIR}/config.toml ] || cp config/config.toml ${CONFDIR}/config.toml
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/dwmblocksr\

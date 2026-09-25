@@ -632,7 +632,7 @@ mod tests {
     }
 
     fn block(icon: &str, signal: u32) -> Block {
-        Block { icon: icon.to_string(), command: String::new(), interval: 0, signal }
+        Block { icon: icon.to_string(), command: String::new(), interval: 0, signal, battery: None }
     }
 
     #[test]

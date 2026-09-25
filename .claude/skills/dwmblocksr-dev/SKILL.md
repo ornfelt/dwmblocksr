@@ -49,9 +49,9 @@ The priorities, in order (the same as dwmr's):
 |---------------------|-----------------------|-------|
 | dwmblocks.c         | `src/dwmblocks.rs`    | `struct Dwmblocks` holds every global; every C function is a method (or, for signal handlers, a free `extern "C" fn`) in the same order |
 | dwmblocks.c main()  | `src/main.rs`         | argument handling, setup, exit (clear root name, close display) |
-| blocks.def.h        | `src/config.rs`       | `Config::default()` is blocks.def.h plus `delim`, `delimLen` and `ASYNC`; the rest is the TOML loader |
+| blocks.def.h        | `src/config.rs`       | `Config::default()` is blocks.def.h plus `delim`, `delimLen` and `ASYNC`, with sb-internet/sb-battery as a `battery = false`/`true` pair; the rest is the TOML loader |
 | blocks.h            | `config/config.toml`  | the shipped default config; must equal `Config::default()` (unit test `shipped_config_matches_defaults`) |
-| Makefile, compile.sh | `Makefile`           | `make`, `sudo make install`, `make install-config` (does compile.sh's sb-battery → sb-internet swap without a battery) |
+| Makefile, compile.sh | `Makefile`, `config.rs` | `make`, `sudo make install`, `make install-config`; compile.sh's sb-battery → sb-internet swap is the blocks' `battery` key, applied at startup by `load()` → `selectblocks(hasbattery())` |
 | (none)              | `dwmblocksr.1`        | man page |
 
 Reference C source: `~/.config/dwmblocks/dwmblocks.c`.
