@@ -68,10 +68,10 @@ impl Default for Config {
                 /* block("^c1^",             "~/.local/bin/my_scripts/spotify_dwmblocks.sh", 5,               12), */
                 block("",                    "~/.local/bin/my_scripts/spotify_dwmblocks.sh", 5,               12),
                 block("",                    "~/.local/bin/statusbar/sb-claude",             30,              6),
-                /* net down/up, memory and cpu, shown/hidden with mod-ctrl-p (sb-sysinfo toggle) */
-                block("",                    "~/.local/bin/statusbar/sb-sysinfo net",        2,               7),
-                block("",                    "~/.local/bin/statusbar/sb-sysinfo mem",        2,               7),
-                block("",                    "~/.local/bin/statusbar/sb-sysinfo cpu",        2,               7),
+                /* net down/up, memory and cpu, shown/hidden with mod-ctrl-p (sb-sysinfo toggle), a click shows details */
+                block("",                    "~/.local/bin/statusbar/sb-sysinfo net",        2,               13),
+                block("",                    "~/.local/bin/statusbar/sb-sysinfo mem",        2,               14),
+                block("",                    "~/.local/bin/statusbar/sb-sysinfo cpu",        2,               15),
                 block("^2^\u{f0c2}  ",       "~/.local/bin/statusbar/weather",               1800,            5),
                 block("^3^ \u{f2c8} ",       "~/.local/bin/statusbar/cputemp",               5,               4),
                 block("^4^ ",                "~/.local/bin/statusbar/sb-volume",             0,               10),
