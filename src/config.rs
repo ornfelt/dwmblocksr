@@ -68,6 +68,10 @@ impl Default for Config {
                 /* block("^c1^",             "~/.local/bin/my_scripts/spotify_dwmblocks.sh", 5,               12), */
                 block("",                    "~/.local/bin/my_scripts/spotify_dwmblocks.sh", 5,               12),
                 block("",                    "~/.local/bin/statusbar/sb-claude",             30,              6),
+                /* net down/up, memory and cpu, shown/hidden with mod-ctrl-p (sb-sysinfo toggle) */
+                block("",                    "~/.local/bin/statusbar/sb-sysinfo net",        2,               7),
+                block("",                    "~/.local/bin/statusbar/sb-sysinfo mem",        2,               7),
+                block("",                    "~/.local/bin/statusbar/sb-sysinfo cpu",        2,               7),
                 block("^2^\u{f0c2}  ",       "~/.local/bin/statusbar/weather",               1800,            5),
                 block("^3^ \u{f2c8} ",       "~/.local/bin/statusbar/cputemp",               5,               4),
                 block("^4^ ",                "~/.local/bin/statusbar/sb-volume",             0,               10),
@@ -250,9 +254,9 @@ mod tests {
     #[test]
     fn icons_match_blocks_h() {
         let d = Config::default();
-        assert_eq!(d.blocks[2].icon.as_bytes(), b"^2^\xef\x83\x82  ");
-        assert_eq!(d.blocks[3].icon.as_bytes(), b"^3^ \xef\x8b\x88 ");
-        assert_eq!(d.blocks[7].icon.as_bytes(), b"^6^ \xef\x80\x97 ");
+        assert_eq!(d.blocks[5].icon.as_bytes(), b"^2^\xef\x83\x82  ");
+        assert_eq!(d.blocks[6].icon.as_bytes(), b"^3^ \xef\x8b\x88 ");
+        assert_eq!(d.blocks[10].icon.as_bytes(), b"^6^ \xef\x80\x97 ");
     }
 
     /// compile.sh: sb-battery with a battery, sb-internet without one.
@@ -261,7 +265,7 @@ mod tests {
         let command = |battery| {
             let mut c = Config::default();
             c.selectblocks(battery);
-            assert_eq!(c.blocks.len(), 7);
+            assert_eq!(c.blocks.len(), 10);
             c.blocks.iter().map(|b| b.command.clone()).collect::<Vec<_>>()
         };
         assert!(command(true).iter().any(|c| c.ends_with("sb-battery")));
