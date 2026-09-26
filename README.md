@@ -23,10 +23,10 @@ button as the `sigqueue` value), and the same `BLOCK_BUTTON` for the scripts.
     sudo make install       # /usr/local/bin/dwmblocksr and the man page
     make install-config     # copy the default config to ~/.config/dwmblocksr/config.toml
 
-What dwmblocks' `compile.sh` did at build time, using the `sb-internet` block
-instead of `sb-battery` when there is no `/sys/class/power_supply/BAT*`,
-dwmblocksr does at startup (the `battery` key below), so one config works on
-every machine and a plain `sudo make clean install` is enough.
+What dwmblocks' `compile.sh` did at build time, leaving out `sb-battery` when
+there is no `/sys/class/power_supply/BAT*`, dwmblocksr does at startup (the
+`battery` key below), so one config works on every machine and a plain
+`sudo make clean install` is enough.
 
 ## Running
 

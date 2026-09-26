@@ -39,8 +39,8 @@ install: all
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/dwmblocksr.1
 
 # copy the default config to ~/.config/dwmblocksr unless one is already there;
-# dwmblocksr itself picks sb-battery or sb-internet at startup (the blocks'
-# battery key), which dwmblocks' compile.sh did at build time
+# dwmblocksr itself leaves out sb-battery without a battery at startup (the
+# blocks' battery key), which dwmblocks' compile.sh did at build time
 install-config:
 	mkdir -p ${CONFDIR}
 	[ -e ${CONFDIR}/config.toml ] || cp config/config.toml ${CONFDIR}/config.toml

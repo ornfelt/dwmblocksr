@@ -24,7 +24,7 @@ pub struct Block {
     pub interval: u32,
     pub signal: u32,
     /// Some(true) keeps the block only with a battery, Some(false) only
-    /// without one (compile.sh's sb-battery/sb-internet swap); None always.
+    /// without one (like compile.sh's sb-battery swap); None always.
     pub battery: Option<bool>,
 }
 
@@ -59,8 +59,8 @@ pub fn hasbattery() -> bool {
 }
 
 impl Default for Config {
-    /// blocks.def.h, with compile.sh's sb-battery/sb-internet swap as a
-    /// pair of battery blocks
+    /// blocks.def.h, with sb-battery only on a machine with a battery
+    /// (compile.sh swapped in sb-internet, which the network block replaced)
     fn default() -> Self {
         Config {
             blocks: vec![
@@ -72,11 +72,12 @@ impl Default for Config {
                 block("",                    "~/.local/bin/statusbar/sb-sysinfo net",        2,               13),
                 block("",                    "~/.local/bin/statusbar/sb-sysinfo mem",        2,               14),
                 block("",                    "~/.local/bin/statusbar/sb-sysinfo cpu",        2,               15),
+                /* network: wifi/ethernet, cyan online, red offline, orange while restarting NetworkManager; clicks: details, restart, wifi menu */
+                block("",                    "~/.local/bin/statusbar/sb-network",            3,               16),
                 block("^2^\u{f0c2}  ",       "~/.local/bin/statusbar/weather",               1800,            5),
                 block("^3^ \u{f2c8} ",       "~/.local/bin/statusbar/cputemp",               5,               4),
                 block("^4^ ",                "~/.local/bin/statusbar/sb-volume",             0,               10),
-                /* without a battery, sb-internet takes sb-battery's place */
-                ifbattery(false, block("^5^ ", "~/.local/bin/statusbar/sb-internet",         5,               3)),
+                /* only on a machine with a battery */
                 ifbattery(true, block("^5^ ",  "~/.local/bin/statusbar/sb-battery",          5,               3)),
                 block("^6^ \u{f017} ",       "~/.local/bin/statusbar/sb-clock",              5,               1),
             ],
@@ -254,24 +255,24 @@ mod tests {
     #[test]
     fn icons_match_blocks_h() {
         let d = Config::default();
-        assert_eq!(d.blocks[5].icon.as_bytes(), b"^2^\xef\x83\x82  ");
-        assert_eq!(d.blocks[6].icon.as_bytes(), b"^3^ \xef\x8b\x88 ");
+        assert_eq!(d.blocks[6].icon.as_bytes(), b"^2^\xef\x83\x82  ");
+        assert_eq!(d.blocks[7].icon.as_bytes(), b"^3^ \xef\x8b\x88 ");
         assert_eq!(d.blocks[10].icon.as_bytes(), b"^6^ \xef\x80\x97 ");
     }
 
-    /// compile.sh: sb-battery with a battery, sb-internet without one.
+    /// sb-battery only with a battery; the network block either way.
     #[test]
     fn battery_blocks() {
-        let command = |battery| {
+        let command = |battery, n| {
             let mut c = Config::default();
             c.selectblocks(battery);
-            assert_eq!(c.blocks.len(), 10);
+            assert_eq!(c.blocks.len(), n);
             c.blocks.iter().map(|b| b.command.clone()).collect::<Vec<_>>()
         };
-        assert!(command(true).iter().any(|c| c.ends_with("sb-battery")));
-        assert!(!command(true).iter().any(|c| c.ends_with("sb-internet")));
-        assert!(command(false).iter().any(|c| c.ends_with("sb-internet")));
-        assert!(!command(false).iter().any(|c| c.ends_with("sb-battery")));
+        assert!(command(true, 11).iter().any(|c| c.ends_with("sb-battery")));
+        assert!(!command(false, 10).iter().any(|c| c.ends_with("sb-battery")));
+        assert!(command(true, 11).iter().any(|c| c.ends_with("sb-network")));
+        assert!(command(false, 10).iter().any(|c| c.ends_with("sb-network")));
         let mut c = parse("blocks = [ { command = \"a\" }, { command = \"b\", battery = false } ]").unwrap();
         c.selectblocks(true);
         assert_eq!(c.blocks, vec![block("", "a", 0, 0)]);
