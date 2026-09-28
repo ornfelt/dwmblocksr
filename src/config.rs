@@ -74,7 +74,7 @@ impl Default for Config {
                 block("",                    "~/.local/bin/statusbar/sb-sysinfo cpu",        2,               15),
                 /* network: wifi/ethernet, cyan online, red offline, orange while restarting NetworkManager; clicks: details, restart, wifi menu */
                 block("",                    "~/.local/bin/statusbar/sb-network",            3,               16),
-                block("^2^\u{f0c2}  ",       "~/.local/bin/statusbar/weather",               1800,            5),
+                block("^2^\u{f0c2} ",        "~/.local/bin/statusbar/weather",               1800,            5),
                 block("^3^ \u{f2c8} ",       "~/.local/bin/statusbar/cputemp",               5,               4),
                 block("^4^ ",                "~/.local/bin/statusbar/sb-volume",             0,               10),
                 /* only on a machine with a battery */
@@ -255,7 +255,7 @@ mod tests {
     #[test]
     fn icons_match_blocks_h() {
         let d = Config::default();
-        assert_eq!(d.blocks[6].icon.as_bytes(), b"^2^\xef\x83\x82  ");
+        assert_eq!(d.blocks[6].icon.as_bytes(), b"^2^\xef\x83\x82 ");
         assert_eq!(d.blocks[7].icon.as_bytes(), b"^3^ \xef\x8b\x88 ");
         assert_eq!(d.blocks[10].icon.as_bytes(), b"^6^ \xef\x80\x97 ");
     }
